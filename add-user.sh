@@ -164,6 +164,9 @@ echo "<domain type='kvm'>
   </devices>
 </domain>" > ${USER_HOMEDIR}/use-br0.xml
 
+mkdir -p ${USER_HOMEDIR}/.ssh
+ssh-keygen -b 2048 -t rsa -f ${USER_HOMEDIR}/.ssh/id_rsa -q -N ""
+
 chmod -R a+x ${USER_HOMEDIR}/bin/*
 chown -R ${USER_USERNAME}:${USER_USERNAME} ${USER_HOMEDIR}
 
