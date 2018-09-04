@@ -87,8 +87,13 @@ fqdn            = ppa.launchpad.net
 method          = ftp
 incoming        = ~%(ppa)s/ubuntu' > ${USER_HOMEDIR}/.dput.cf
 
-echo '[log]
-    decorate = short' >> ${USER_HOMEDIR}/.gitconfig
+echo "[log]
+    decorate = short
+[user]
+    email = $USER_EMAIL
+    name = $USER_NAME
+[gitubuntu]
+    lpuser = $USER_LP_NAME" >> ${USER_HOMEDIR}/.gitconfig
 
 cat <<EOF >${USER_HOMEDIR}/bin/vpn-route-cleanup.sh
 #!/bin/bash
@@ -166,3 +171,6 @@ chown -R ${USER_USERNAME}:${USER_USERNAME} ${USER_HOMEDIR}
 echo
 echo
 echo "User ${USER_USERNAME} created. Remember to set their password and authorized keys"
+echo
+echo "For a desktop user, you may want to add to their .profile:"
+echo "    eval \`dbus-launch --sh-syntax\`"

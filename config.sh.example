@@ -6,6 +6,7 @@ USER_USERNAME=karl
 USER_HOMEDIR=/home/karl
 USER_NAME="Karl Stenerud"
 USER_EMAIL="karl.stenerud@canonical.com"
+USER_LP_NAME=kstenerud
 
 # Local mirror location. Used by use-local-mirror.sh
 APT_MIRROR="http://10.5.0.189/ubuntu/"
