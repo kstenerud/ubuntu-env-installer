@@ -49,7 +49,8 @@ add_user_to_groups ${USER_USERNAME} sudo lxd kvm libvirt docker
 mkdir -p ${USER_HOMEDIR}/bin
 
 echo "export DEBFULLNAME=\"$USER_NAME\"
-export DEBEMAIL=\"${USER_EMAIL}\"" >> ${USER_HOMEDIR}/.profile
+export DEBEMAIL=\"${USER_EMAIL}\"
+export DEBSIGN_KEYID=\"$USER_GPG_KEY\"" >> ${USER_HOMEDIR}/.profile
 
 echo "alias dquilt=\"quilt --quiltrc=${USER_HOMEDIR}/.quiltrc-dpkg\"" >> ${USER_HOMEDIR}/.bashrc
 
