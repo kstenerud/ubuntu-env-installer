@@ -5,6 +5,16 @@
 
 set -eu
 
+# -------------
+# Configuration
+# -------------
+
+UBUNTU_RELEASE_PREVIOUS_LTS=xenial
+UBUNTU_RELEASE_PREVIOUS=artful
+UBUNTU_RELEASE_CURRENT=bionic
+UBUNTU_RELEASE_NEXT=cosmic
+
+
 # ------------------
 # Installers & Tools
 # ------------------
@@ -177,22 +187,31 @@ lxc config device add frankenbridge eth1 nic name=eth1 nictype=bridged parent=br
 # Images
 # ------
 
-echo "Environment is now set up."
+echo "Environment is now set up. Downloading VM and container images."
 echo "Pre-downloading LXC Ubuntu Images..."
 
-lxc image copy ubuntu:xenial local:
-lxc image copy ubuntu:artful local:
-lxc image copy ubuntu:bionic local:
-lxc image copy ubuntu-daily:bionic local:
-lxc image copy ubuntu-daily:cosmic local:
+lxc image copy ubuntu:$UBUNTU_RELEASE_PREVIOUS_LTS local:
+lxc image copy ubuntu:$UBUNTU_RELEASE_PREVIOUS local:
+lxc image copy ubuntu:$UBUNTU_RELEASE_CURRENT local:
+lxc image copy ubuntu-daily:$UBUNTU_RELEASE_CURRENT local:
+lxc image copy ubuntu-daily:$UBUNTU_RELEASE_NEXT local:
 
 echo "Pre-downloading KVM Ubuntu Images..."
 
-uvt-simplestreams-libvirt sync arch=amd64 release=xenial
-uvt-simplestreams-libvirt sync arch=amd64 release=artful
-uvt-simplestreams-libvirt sync arch=amd64 release=bionic
-uvt-simplestreams-libvirt sync --source http://cloud-images.ubuntu.com/daily arch=amd64 release=bionic
-uvt-simplestreams-libvirt sync --source http://cloud-images.ubuntu.com/daily arch=amd64 release=cosmic
+uvt-simplestreams-libvirt sync arch=amd64 release=$UBUNTU_RELEASE_PREVIOUS_LTS
+uvt-simplestreams-libvirt sync arch=amd64 release=$UBUNTU_RELEASE_PREVIOUS
+uvt-simplestreams-libvirt sync arch=amd64 release=$UBUNTU_RELEASE_CURRENT
+uvt-simplestreams-libvirt sync --source http://cloud-images.ubuntu.com/daily arch=amd64 release=$UBUNTU_RELEASE_CURRENT
+uvt-simplestreams-libvirt sync --source http://cloud-images.ubuntu.com/daily arch=amd64 release=$UBUNTU_RELEASE_NEXT
+
+echo "Pre-downloading autopkgtest images..."
+mkdir -p /var/lib/adt-images
+autopkgtest-buildvm-ubuntu-cloud -o /var/lib/adt-images -r $UBUNTU_RELEASE_PREVIOUS_LTS
+autopkgtest-buildvm-ubuntu-cloud -o /var/lib/adt-images -r $UBUNTU_RELEASE_CURRENT --cloud-image-url http://cloud-images.ubuntu.com/daily/server
+autopkgtest-buildvm-ubuntu-cloud -o /var/lib/adt-images -r $UBUNTU_RELEASE_NEXT --cloud-image-url http://cloud-images.ubuntu.com/daily/server
+autopkgtest-build-lxd ubuntu:$UBUNTU_RELEASE_PREVIOUS_LTS/amd64
+autopkgtest-build-lxd ubuntu-daily:$UBUNTU_RELEASE_CURRENT/amd64
+autopkgtest-build-lxd ubuntu-daily:$UBUNTU_RELEASE_NEXT/amd64
 
 
 echo
