@@ -12,12 +12,23 @@ set -u
 # Installers & Tools
 # ------------------
 
-create_user()
+delete_user()
+{
+    username=$1
+    if $(id -u $username > /dev/null 2>&1); then
+        echo "Deleting user $username"
+        userdel -rf $username
+    else
+        echo "Not deleting user $username: User does not exist."
+    fi
+}
+
+create_admin_user()
 {
     username=$1
     password=$2
     if ! id -u $username > /dev/null 2>&1; then
-        echo "Creating user $username"
+        echo "Creating admin user $username"
         useradd --create-home --shell /bin/bash --user-group --groups adm,sudo $username
         if [ "$username" != "-" ]; then
             echo ${username}:${password} | chpasswd
@@ -39,28 +50,20 @@ add_user_to_groups()
     done
 }
 
+modify_profile()
+{
+    echo "export DEBFULLNAME=\"${USER_NAME}\"" >> ${USER_HOMEDIR}/.profile
+    echo "export DEBEMAIL=\"${USER_EMAIL}\"" >> ${USER_HOMEDIR}/.profile
 
-# ----
-# User
-# ----
+    # Fix "clear-sign failed: Inappropriate ioctl for device"
+    echo "export GPG_TTY=\$(tty)" >> ${USER_HOMEDIR}/.profile
+}
 
-create_user ${USER_USERNAME} -
-add_user_to_groups ${USER_USERNAME} sudo lxd kvm libvirt docker
-mkdir -p ${USER_HOMEDIR}/bin
+configure_quilt()
+{
+    echo "alias dquilt=\"quilt --quiltrc=${USER_HOMEDIR}/.quiltrc-dpkg\"" >> ${USER_HOMEDIR}/.bashrc
 
-echo "export DEBFULLNAME=\"$USER_NAME\"
-export DEBEMAIL=\"${USER_EMAIL}\"" >> ${USER_HOMEDIR}/.profile
-
-echo "alias dquilt=\"quilt --quiltrc=${USER_HOMEDIR}/.quiltrc-dpkg\"" >> ${USER_HOMEDIR}/.bashrc
-
-# Fix problem where git ubuntu build tries to use key of last person in debian/changes
-echo "DEBSIGN_KEYID=\"$USER_GPG_KEY\"" >> ~/.devscripts
-
-# Fix "clear-sign failed: Inappropriate ioctl for device"
-echo "export GPG_TTY=\$(tty)" >> ~/.profile
-
-
-echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
+    echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
 if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
     # if in Debian packaging tree with unset $QUILT_PATCHES
     QUILT_PATCHES="debian/patches"
@@ -71,7 +74,7 @@ if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
     if ! [ -d $d/debian/patches ]; then mkdir $d/debian/patches; fi
 fi' > ${USER_HOMEDIR}/.quiltrc
 
-echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
+    echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
 if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
     # if in Debian packaging tree with unset $QUILT_PATCHES
     QUILT_PATCHES="debian/patches"
@@ -81,8 +84,12 @@ if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
     QUILT_COLORS="diff_hdr=1;32:diff_add=1;34:diff_rem=1;31:diff_hunk=1;33:diff_ctx=35:diff_cctx=33"
     if ! [ -d $d/debian/patches ]; then mkdir $d/debian/patches; fi
 fi' > ${USER_HOMEDIR}/.quiltrc-dpkg
+}
 
-echo '[DEFAULT]
+
+configure_dput()
+{
+    echo '[DEFAULT]
 default_host_main = unspecified
 
 [unspecified]
@@ -93,16 +100,29 @@ incoming = /
 fqdn            = ppa.launchpad.net
 method          = ftp
 incoming        = ~%(ppa)s/ubuntu' > ${USER_HOMEDIR}/.dput.cf
+}
 
-echo "[log]
+configure_ssh()
+{
+    mkdir -p ${USER_HOMEDIR}/.ssh
+    ssh-keygen -b 2048 -t rsa -f ${USER_HOMEDIR}/.ssh/id_rsa -q -N ""
+    echo "Created default ssh key with no password. Please replace this with something more secure."
+}
+
+configure_git()
+{
+    echo "[log]
     decorate = short
 [user]
-    email = $USER_EMAIL
-    name = $USER_NAME
+    email = ${USER_EMAIL}
+    name = ${USER_NAME}
 [gitubuntu]
-    lpuser = $USER_LP_NAME" >> ${USER_HOMEDIR}/.gitconfig
+    lpuser = ${USER_LP_NAME}" >> ${USER_HOMEDIR}/.gitconfig
+}
 
-cat <<EOF >${USER_HOMEDIR}/bin/vpn-route-cleanup.sh
+add_bin_programs()
+{
+    cat <<EOF >${USER_HOMEDIR}/bin/vpn-route-cleanup.sh
 #!/bin/bash
 sudo true || { echo "sudo failed, bailing"; exit 1; }
 echo -n "Detecting ipv4 gateway... "
@@ -140,8 +160,11 @@ for d in \$destinations; do
     done
 done
 EOF
+}
 
-echo "<domain type='kvm'>
+add_bridge_config()
+{
+    echo "<domain type='kvm'>
   <os>
     <type>hvm</type>
     <boot dev='hd'/>
@@ -170,17 +193,35 @@ echo "<domain type='kvm'>
     <video/>
   </devices>
 </domain>" > ${USER_HOMEDIR}/use-br0.xml
+}
 
-mkdir -p ${USER_HOMEDIR}/.ssh
-ssh-keygen -b 2048 -t rsa -f ${USER_HOMEDIR}/.ssh/id_rsa -q -N ""
+
+# ----
+# User
+# ----
+
+delete_user ubuntu
+create_admin_user ${USER_USERNAME} -
+add_user_to_groups ${USER_USERNAME} lxd kvm libvirt docker
+mkdir -p ${USER_HOMEDIR}/bin
+
+modify_profile
+configure_quilt
+configure_ssh
+configure_git
+add_bin_programs
+add_bridge_config
 
 chmod -R a+x ${USER_HOMEDIR}/bin/*
 chown -R ${USER_USERNAME}:${USER_USERNAME} ${USER_HOMEDIR}
 
 
-echo
-echo
-echo "User ${USER_USERNAME} created. Remember to set their password and authorized keys"
-echo
-echo "For a desktop user, you may want to add to their .profile:"
-echo "    eval \`dbus-launch --sh-syntax\`"
+echo "
+User ${USER_USERNAME} created with homedir ${USER_HOMEDIR}. Remember to set:
+ * Password
+ * SSH keys & authorized-keys
+ * GPG keys
+
+For a desktop user, you may want to add to their .profile:
+    eval \`dbus-launch --sh-syntax\`
+"
