@@ -12,10 +12,16 @@ set -u
 # Installers & Tools
 # ------------------
 
+user_exists()
+{
+    username=$1
+    id -u $username > /dev/null 2>&1
+}
+
 delete_user()
 {
     username=$1
-    if $(id -u $username > /dev/null 2>&1); then
+    if user_exists $username; then
         echo "Deleting user $username"
         userdel -rf $username
     else
@@ -23,14 +29,62 @@ delete_user()
     fi
 }
 
+qfind()
+{
+    set +e
+    find $@ > files_and_folders 2> >(grep -v 'Permission denied' | grep -v 'No such file or directory' | grep -v 'Operation not permitted' >&2)
+    set -e
+}
+
+change_user_uid_gid()
+{
+    username=$1
+    new_uid=$2
+    new_gid=$3
+
+    if ! user_exists $username; then
+        echo "Not changing user $username: User does not exist."
+        return
+    fi
+
+    set +u
+    sudo_user=$SUDO_USER
+    set -u
+    if [ ! -z "$sudo_user" ]; then
+        echo "WARNING: You are sudoed from user $username. Cannot change their uid/gid. Please do so manually."
+        return 1
+    fi
+
+    group=$username
+    old_uid=$(id -u $username)
+    old_gid=$(id -g $username)
+
+    echo "Changing user $username: uid $old_uid -> $new_uid, gid $old_gid -> $new_gid"
+
+    usermod -u $new_uid $username
+    groupmod -g $new_gid $group
+    qfind / -user $old_uid -exec chown -h $new_uid {} \;
+    qfind / -group $old_gid -exec chgrp -h $new_gid {} \;
+    usermod -g $new_gid $username
+}
+
 create_admin_user()
 {
     username=$1
     password=$2
-    if ! id -u $username > /dev/null 2>&1; then
-        echo "Creating admin user $username"
-        useradd --create-home --shell /bin/bash --user-group --groups adm,sudo $username
-        if [ "$username" != "-" ]; then
+    uid=$3
+    gid=$4
+    group=$username
+    if ! user_exists $username; then
+        if [ "$uid" != "-" ] && [ "$gid" != "-" ]; then
+            echo "Creating admin user $username with uid $uid and gid $gid"
+            groupadd --gid $gid $group
+            useradd --uid $uid --gid $gid --create-home --shell /bin/bash --groups adm,sudo $username
+        else
+            echo "Creating admin user $username with system generated uid and gid"
+            useradd --create-home --shell /bin/bash --user-group --groups adm,sudo $username
+        fi
+        if [ "$password" != "-" ]; then
             echo ${username}:${password} | chpasswd
         fi
     fi
@@ -38,16 +92,30 @@ create_admin_user()
 
 add_user_to_groups()
 {
-    user=$1
+    username=$1
     shift
     groups=$@
     for group in $groups; do
-        if grep $group /etc/group; then
-            usermod -a -G $group ${USER_USERNAME}
+        if grep $group /etc/group >/dev/null; then
+            usermod -a -G $group $username
         else
-            echo "Warning: Not adding group $group because it doesn't exist."
+            echo "WARNING: Not adding group $group because it doesn't exist."
         fi
     done
+}
+
+create_main_user()
+{
+    set +e
+    if change_user_uid_gid ubuntu 1001 1001; then
+        set -e
+        create_admin_user ${USER_USERNAME} - 1000 1000
+    else
+        set -e
+        create_admin_user ${USER_USERNAME} - - -
+    fi
+    add_user_to_groups ${USER_USERNAME} lxd kvm libvirt docker
+    mkdir -p ${USER_HOMEDIR}/bin
 }
 
 modify_profile()
@@ -200,11 +268,7 @@ add_bridge_config()
 # User
 # ----
 
-delete_user ubuntu
-create_admin_user ${USER_USERNAME} -
-add_user_to_groups ${USER_USERNAME} lxd kvm libvirt docker
-mkdir -p ${USER_HOMEDIR}/bin
-
+create_main_user
 modify_profile
 configure_quilt
 configure_ssh
