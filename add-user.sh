@@ -57,7 +57,7 @@ echo "alias dquilt=\"quilt --quiltrc=${USER_HOMEDIR}/.quiltrc-dpkg\"" >> ${USER_
 echo "DEBSIGN_KEYID=\"$USER_GPG_KEY\"" >> ~/.devscripts
 
 # Fix "clear-sign failed: Inappropriate ioctl for device"
-echo "export GPG_TTY=$(tty)" >> ~/.profile
+echo "export GPG_TTY=\$(tty)" >> ~/.profile
 
 
 echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
