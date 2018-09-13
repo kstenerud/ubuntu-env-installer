@@ -2,6 +2,12 @@
 
 # Configuration file used by add-user.sh and use-local-mirror.sh
 
+LOCALE_LANGUAGE=en
+LOCALE_REGION=US
+KEYBOARD_LAYOUT=us
+KEYBOARD_MODEL=pc105
+TIMEZONE=America/Vancouver
+
 USER_USERNAME=karl
 USER_HOMEDIR=/home/karl
 USER_NAME="Karl Stenerud"

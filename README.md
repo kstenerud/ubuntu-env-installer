@@ -21,6 +21,8 @@ Requires config.sh
 Installs a console work environment.
 Note: The script assumes permissions that won't work in an unprivileged container.
 
+Requires config.sh
+
 
 ### install-ubuntu-desktop.sh
 
