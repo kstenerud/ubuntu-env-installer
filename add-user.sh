@@ -115,7 +115,6 @@ create_main_user()
         create_admin_user ${USER_USERNAME} - - -
     fi
     add_user_to_groups ${USER_USERNAME} lxd kvm libvirt docker
-    mkdir -p ${USER_HOMEDIR}/bin
 }
 
 modify_profile()
@@ -199,7 +198,6 @@ configure_quilt
 configure_ssh
 configure_git
 
-chmod -R a+x ${USER_HOMEDIR}/bin/*
 chown -R ${USER_USERNAME}:${USER_USERNAME} ${USER_HOMEDIR}
 
 
