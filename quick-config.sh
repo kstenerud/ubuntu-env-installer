@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# Just copies the example config.
+echo "Copying cp config.sh.example to config.sh"
 
 cp config.sh.example config.sh

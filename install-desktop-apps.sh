@@ -117,5 +117,4 @@ install_packages_from_urls \
 
 
 echo
-echo
-echo "Desktop install complete!"
+echo "Desktop apps install complete!"

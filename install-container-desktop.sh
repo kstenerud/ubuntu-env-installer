@@ -114,7 +114,7 @@ apply_bluetooth_fix()
 
 apply_bluetooth_fix
 
-install_packages software-properties-common ubuntu-mate-desktop openssh-server
+install_packages software-properties-common openssh-server ubuntu-mate-desktop
 
 uninstall_packages light-locker
 
@@ -136,8 +136,10 @@ disable_services \
 
 
 echo
+echo "Container desktop installed. You may need to create a user and set up authentication."
 echo
-echo "Container desktop installed. You'll still need to create a user, and set up authentication."
-echo "Password authentication is disabled by default. To enable it:"
+echo "First time connection must be done using x2go. Once logged in, you can set up chrome remote desktop."
+echo
+echo "SSH Password authentication is disabled by default. To enable it:"
 echo " * modify PasswordAuthentication in /etc/ssh/sshd_config"
 echo " * systemctl restart sshd"
