@@ -128,8 +128,6 @@ modify_profile()
 
 configure_quilt()
 {
-    echo "alias dquilt=\"quilt --quiltrc=${USER_HOMEDIR}/.quiltrc-dpkg\"" >> ${USER_HOMEDIR}/.bashrc
-
     echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
 if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
     # if in Debian packaging tree with unset $QUILT_PATCHES
@@ -140,17 +138,6 @@ if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
     QUILT_COLORS="diff_hdr=1;32:diff_add=1;34:diff_rem=1;31:diff_hunk=1;33:diff_ctx=35:diff_cctx=33"
     if ! [ -d $d/debian/patches ]; then mkdir $d/debian/patches; fi
 fi' > ${USER_HOMEDIR}/.quiltrc
-
-    echo 'd=. ; while [ ! -d $d/debian -a `readlink -e $d` != / ]; do d=$d/..; done
-if [ -d $d/debian ] && [ -z $QUILT_PATCHES ]; then
-    # if in Debian packaging tree with unset $QUILT_PATCHES
-    QUILT_PATCHES="debian/patches"
-    QUILT_PATCH_OPTS="--reject-format=unified"
-    QUILT_DIFF_ARGS="-p ab --no-timestamps --no-index --color=auto"
-    QUILT_REFRESH_ARGS="-p ab --no-timestamps --no-index"
-    QUILT_COLORS="diff_hdr=1;32:diff_add=1;34:diff_rem=1;31:diff_hunk=1;33:diff_ctx=35:diff_cctx=33"
-    if ! [ -d $d/debian/patches ]; then mkdir $d/debian/patches; fi
-fi' > ${USER_HOMEDIR}/.quiltrc-dpkg
 }
 
 
