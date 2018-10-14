@@ -149,6 +149,8 @@ install_packages \
         qemu-kvm \
         quilt \
         rsnapshot \
+        snapcraft \
+        snapd \
         ubuntu-dev-tools \
         uvtool \
         virt-manager \
