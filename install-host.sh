@@ -171,4 +171,4 @@ else
 	usage
 fi
 
-echo "Host software installed."
+echo "Host software installed. Restart the machine to ensure everything's loaded."
