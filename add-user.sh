@@ -106,14 +106,15 @@ add_user_to_groups()
 
 create_main_user()
 {
-    set +e
-    if change_user_uid_gid ubuntu 1001 1001; then
-        set -e
-        create_admin_user ${USER_USERNAME} - 1000 1000
-    else
-        set -e
-        create_admin_user ${USER_USERNAME} - - -
-    fi
+    # set +e
+    # if change_user_uid_gid ubuntu 1001 1001; then
+    #     set -e
+    #     create_admin_user ${USER_USERNAME} - 1000 1000
+    # else
+    #     set -e
+    #     create_admin_user ${USER_USERNAME} - - -
+    # fi
+    create_admin_user ${USER_USERNAME} - - -
     add_user_to_groups ${USER_USERNAME} lxd kvm libvirt docker
 }
 
