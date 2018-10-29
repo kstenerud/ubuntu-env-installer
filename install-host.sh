@@ -71,6 +71,15 @@ make_user_paths()
     done
 }
 
+add_subuid_subgid_mapping()
+{
+	user=$1
+	uid=$(id -u $1)
+	gid=$(id -g $1)
+	echo "root:$uid:1" >> /etc/subuid
+	echo "root:$gid:1" >> /etc/subgid
+}
+
 #######################################
 
 install_for_console()
@@ -93,6 +102,8 @@ install_for_console()
 		kvm \
 		lxd \
 		libvirt
+
+	add_subuid_subgid_mapping $user
 
 	make_user_paths $user \
 		"~${user}/bin" \
