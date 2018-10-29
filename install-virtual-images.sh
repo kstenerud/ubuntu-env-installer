@@ -7,11 +7,6 @@ set -eu
 # Configuration
 # -------------
 
-UBUNTU_RELEASE_PREVIOUS_LTS=xenial
-UBUNTU_RELEASE_PREVIOUS=artful
-UBUNTU_RELEASE_CURRENT=bionic
-UBUNTU_RELEASE_NEXT=cosmic
-
 ARCHITECTURE=amd64
 AUTOPKGTEST_IMAGES_DIR=/var/lib/adt-images
 
@@ -24,6 +19,8 @@ download_lxc_image()
 {
 	release=$1
 	version=$2
+	if [ "$release" == "-" ]; then return; fi
+
 	echo "Downloading lxc $release $version"
 	if [ "$version" = "daily" ]; then
 		lxc image copy ubuntu-daily:$release local:
@@ -36,6 +33,8 @@ download_uvt_image()
 {
 	release=$1
 	version=$2
+	if [ "$release" == "-" ]; then return; fi
+
 	echo "Downloading uvt $release $version"
 	if [ "$version" = "daily" ]; then
 		uvt-simplestreams-libvirt sync arch=$ARCHITECTURE release=$release --source http://cloud-images.ubuntu.com/daily
@@ -48,6 +47,8 @@ download_adt_image()
 {
 	release=$1
 	version=$2
+	if [ "$release" == "-" ]; then return; fi
+
 	echo "Downloading adt $release $version"
 	mkdir -p "$AUTOPKGTEST_IMAGES_DIR"
 	if [ "$version" = "daily" ]; then
@@ -59,38 +60,26 @@ download_adt_image()
 	fi
 }
 
+download_image_sets()
+{
+	version=$1
+	shift
+    releases=$@
+    for release in $releases; do
+		download_lxc_image $release $version
+		download_uvt_image $release $version
+		download_adt_image $release $version
+    done
+}
 
 # ------
 # Images
 # ------
 
-echo "Environment is now set up. Downloading VM and container images."
+echo "Installing VM and container images."
 
-echo "Pre-downloading LXC Ubuntu Images..."
-
-download_lxc_image $UBUNTU_RELEASE_PREVIOUS_LTS release
-download_lxc_image $UBUNTU_RELEASE_PREVIOUS     release
-download_lxc_image $UBUNTU_RELEASE_CURRENT      release
-download_lxc_image $UBUNTU_RELEASE_CURRENT      daily
-download_lxc_image $UBUNTU_RELEASE_NEXT         daily
-
-
-echo "Pre-downloading autopkgtest images to $AUTOPKGTEST_IMAGES_DIR..."
-
-download_adt_image $UBUNTU_RELEASE_PREVIOUS_LTS release
-download_adt_image $UBUNTU_RELEASE_PREVIOUS     release
-download_adt_image $UBUNTU_RELEASE_CURRENT      release
-download_adt_image $UBUNTU_RELEASE_CURRENT      daily
-download_adt_image $UBUNTU_RELEASE_NEXT         daily
-
-
-echo "Pre-downloading UVT Ubuntu Images..."
-
-download_uvt_image $UBUNTU_RELEASE_PREVIOUS_LTS release
-download_uvt_image $UBUNTU_RELEASE_PREVIOUS     release
-download_uvt_image $UBUNTU_RELEASE_CURRENT      release
-download_uvt_image $UBUNTU_RELEASE_CURRENT      daily
-download_uvt_image $UBUNTU_RELEASE_NEXT         daily
+download_image_sets daily   cosmic
+download_image_sets release cosmic bionic xenial trusty
 
 echo
-echo "Virtual images installed."
+echo "VM and container images have been installed."
