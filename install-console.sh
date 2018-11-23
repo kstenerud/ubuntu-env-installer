@@ -160,4 +160,4 @@ install_snap git-ubuntu   classic
 install_snap ustriage     classic
 
 echo
-echo "Console install complete! You may need to create a user."
+echo "Console install complete."
