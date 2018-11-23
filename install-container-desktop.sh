@@ -143,5 +143,5 @@ echo
 echo "First time connection must be done using x2go. Once logged in, you can set up chrome remote desktop."
 echo
 echo "SSH Password authentication is disabled by default. To enable it:"
-ecjo " * sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
+echo " * sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
 echo " * systemctl restart sshd"
