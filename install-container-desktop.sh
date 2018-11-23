@@ -87,7 +87,7 @@ disable_services()
     service_names=$@
     for service in $service_names; do
         echo "Disabling service $service"
-        systemctl disable $service
+        systemctl disable $service || true
     done
 }
 
@@ -111,6 +111,8 @@ apply_bluetooth_fix()
 # -----------------
 # Container Desktop
 # -----------------
+
+apt update
 
 apply_bluetooth_fix
 
@@ -141,5 +143,5 @@ echo
 echo "First time connection must be done using x2go. Once logged in, you can set up chrome remote desktop."
 echo
 echo "SSH Password authentication is disabled by default. To enable it:"
-echo " * modify PasswordAuthentication in /etc/ssh/sshd_config"
+ecjo " * sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config"
 echo " * systemctl restart sshd"
