@@ -156,7 +156,7 @@ install_packages \
         virt-manager \
         virtinst
 
-install_snap git-ubuntu   classic
+snap install --classic --edge git-ubuntu
 install_snap ustriage     classic
 
 echo
